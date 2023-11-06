@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>DNS Zone Management</title>
+</head>
+<body>
+    <h1>DNS Zone Management</h1>
+
+    <h2>Create New DNS Zone</h2>
+    
+        <label for="zone_name">Zone Name:</label>
+        <input type="text" id="zone_name" name="zone_name" required>
+        <label for="zone_master">Zone Master:</label>
+        <input type="text" id="zone_master" name="zone_master">
+        <label for="zone_last_check">Last Check:</label>
+        <input type="number" id="zone_last_check" name="zone_last_check" required>
+        <label for="zone_type">Zone Type:</label>
+        <input type="text" id="zone_type" name="zone_type" required>
+        <label for="zone_notified_serial">Notified Serial:</label>
+        <input type="number" id="zone_notified_serial" name="zone_notified_serial">
+        <label for="zone_account">Account:</label>
+        <input type="text" id="zone_account" >
+        <label for="zone_options">Options:</label>
+        <input type="text" id="zone_options" >
+        <label for="zone_catalog">Catalog:</label>
+        <input type="text" id="zone_catalog" >
+        <button type="submit" id="zone-cre">Create Zone</button>
+        <br>
+        <br>
+    <h2>Create DNS Record in a specific Zone</h2>
+        
+        <label >Zone Id</label>
+        <input type="text" id="zone_idr_r"  required>
+        <label >Name</label>
+        <input type="text" id="zone_namer_r" >
+        <label >Type</label>
+        <input type="text" id="zone_typer_r" >
+        <label >Content</label>
+        <input type="text" id="zone_contentr"  required>
+        <label >ttl</label>
+        <input type="text" id="zone_ttlr_r" >
+        <label >pro</label>
+        <input type="text" id="zone_pror_r" >
+        <label >disabled</label>
+        <input type="text" id="zone_r" >
+        <button id="submlui">Create Records</button>
+            
+            
+   
+
+    <h2>Fetch all DNS Zones</h2>
+    <button id="fetch-details-button">Get DNS Zones</button>
+    <table>
+    <tr id="zone-details-list">
+        
+       
+    </tr>
+    </table>
+    <h2>Fetch DNS Records for a specific Zone</h2>
+    <input type="number" id="dns-record-zone" placeholder="Enter Zone Id">
+    <button id="get-dns-zone">Get DNS Zone records</button>
+    <ul id="list-dns-record">
+    </ul>
+
+
+    <h2>Update DNS Zone</h2>
+    
+        <label for="update-notified-serial">Enter Zone Name</label>
+        <input type="text" id="update-zone-name">
+        <label>Select Zone details</label>
+        <select id="zonede">
+            <option value="name">Name</option>
+            <option value="master">Master</option>
+            <option value="last_check">Last_Check</option>
+            <option value="type">TY</option>
+            <option value="notified_serial">Notified Serial</option>
+            <option value="account">Account</option>
+            <option value="options">Options</option>
+            <option value="catalog">Catalog</option>
+        </select>
+        <input type="text" placeholder="Enter new value" id="new-value"> 
+        
+        <button type="submit" id="submit-update">Update Zone</button>
+  
+    <h2>Update DNS Zone Records</h2>
+    
+        <label for="update-notified-serial">Enter Zone ID</label>
+        <input type="number" id="zone-id-ty" name="notified_serial">
+        <input type="number" id="record-id-ty"  placeholder="Enter Record ID">
+        <select id="recordtype">
+            <option value="name">Name</option>
+            <option value="type">Type</option>
+            <option value="content">Content</option>
+            <option value="ttl">ttl</option>
+            <option value="prio">prio</option>
+            <option value="disabled">Disabled</option>
+            
+        </select>
+        <input type="text" id="reval">
+        <button type="submit" id="submit-re-ty">Update Zone</button>
+ 
+
+    <h2>Delete a DNS Zone</h2>
+    
+        <input type="text" placeholder="Enter Zone Name" id="zone">
+        <button type="submit" id="submit-zone">Delete Zone</button>
+ 
+    <h2>Delete all DNS records in a zone</h2>
+    
+        <input type="text" placeholder="Enter Zone id" id="zone-id">
+        <button type="submit" id="submit-zone-id">Delete Zone</button>
+
+    <h2>Delete specific DNS records in a zone</h2>
+  
+        <input type="number" placeholder="Enter Zone id" id="num-zone-ty">
+        <input type="text" placeholder="Enter record type" id="te-zone-ty">
+        <button type="submit" id="submit-zone-id-ty">Delete Zone</button>
+</body>
+
+<script>
+    document.getElementById('fetch-details-button').addEventListener('click', function() {
+        const zoneName = 'example.com'; 
+
+       
+        fetch(`http://localhost:5000/zones`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data);
+            const zoneDetailsList = document.getElementById('zone-details-list');
+            zoneDetailsList.innerHTML = ''; 
+            data.forEach(item => {
+                const listItem = document.createElement('tr');
+                listItem.textContent = JSON.stringify(item, null, 4); 
+                zoneDetailsList.appendChild(listItem);
+            });
+            
+        })
+        .catch(error => alert('Error fetching DNS zone details', error));
+    });
+    document.getElementById('get-dns-zone').addEventListener('click', function() {
+        const zoneName = document.getElementById("dns-record-zone").value; 
+        console.log(zoneName);
+        
+        fetch(`http://localhost:5000/zones/${zoneName}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data);
+            console.log(data.length)
+            const zoneDetailsList = document.getElementById('list-dns-record');
+            zoneDetailsList.innerHTML = ''; 
+
+            
+            data.forEach(item => {
+                const listItem = document.createElement('li');
+                listItem.textContent = JSON.stringify(item, null, 4); 
+                zoneDetailsList.appendChild(listItem);
+            });
+            if(data.length==0)
+            {
+                alert("No Records found");
+            }
+            
+        })
+        .catch(error => alert('Error fetching DNS zone details', error));
+    });
+    document.getElementById('submit-zone').addEventListener('click', function() {
+        const zoneName = document.getElementById("zone").value; 
+        console.log(zoneName);
+        
+        fetch(`http://localhost:5000/zones/${zoneName}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if(data.error)
+            {
+            console.log(data);
+            alert(data.error)
+            }
+            else{
+                console.log(data)
+                alert(data.message)
+            }
+        })
+        .catch(error => alert('Error fetching DNS zone details', error));
+    });
+    document.getElementById('submit-zone-id').addEventListener('click', function() {
+        const zoneName = document.getElementById("zone-id").value;
+        console.log(zoneName);
+        
+        fetch(`http://localhost:5000/zones/${zoneName}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data);
+            alert(data.message)
+        })
+        .catch(error => alert('Error deleting DNS zone details', error));
+    });
+    document.getElementById('submit-zone-id-ty').addEventListener('click', function() {
+        const zoneName = document.getElementById("num-zone-ty").value;
+        const zoneNa = document.getElementById("te-zone-ty").value; 
+        console.log(zoneName);
+        
+        fetch(`http://localhost:5000/zones/${zoneName}/${zoneNa}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if(data.details)
+            {
+                console.log(data.error)
+                alert(data.error)
+            }
+            else
+            {
+            console.log(data.message);
+            alert(data.message);
+            }
+            
+        })
+        .catch(error => alert('Error deleting DNS zone details', error));
+    });
+    document.getElementById('submit-update').addEventListener('click', function() {
+        const zoneName = document.getElementById("update-zone-name").value;
+        const zoneDetails = document.getElementById("zonede").value;
+        const recorded = document.getElementById("new-value").value 
+        console.log(zoneName);
+        console.log(recorded);
+        const requestData = {
+        "zoneName": zoneName,
+        "zoneDetails": zoneDetails,
+        "recorded": recorded
+    };
+        fetch(`http://localhost:5000/zones/${zoneName}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(requestData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if(data.error)
+            {
+                console.log(data)
+                alert(data.error)
+            }
+            else
+            {
+            console.log(data)
+            console.log(data.message);
+            alert(data.message)
+            }
+        })
+        .catch(error => alert('Error updating DNS zone details', error));
+    });
+    document.getElementById('submit-re-ty').addEventListener('click', function() {
+        const recId = document.getElementById("record-id-ty").value;
+        const zoneId = document.getElementById("zone-id-ty").value;
+        const zoneDetails = document.getElementById("recordtype").value;
+        const recorded = document.getElementById("reval").value 
+        console.log(zoneId);
+        console.log(recorded);
+        const requestData = {
+        "recId":recId,
+        "zoneId": zoneId,
+        "zoneDetails": zoneDetails,
+        "recorded": recorded
+    };
+        fetch(`http://localhost:5000/zones/${zoneId}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(requestData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if(data.error)
+            {
+            console.log(data);
+            alert(data.error);
+            }
+            else
+            {
+                console.log(data)
+                alert(data.message)
+            }
+        })
+        .catch(error => alert('Error updating DNS zone details', error));
+    });
+    document.getElementById('zone-cre').addEventListener('click', function() {
+        const zonena= document.getElementById("zone_name").value;
+        const zonemas = document.getElementById("zone_master").value;
+        const zonelastcheck = document.getElementById("zone_last_check").value;
+        const zonetype = document.getElementById("zone_type").value
+        const zoneno = document.getElementById("zone_notified_serial").value;
+        const zoneaccount= document.getElementById("zone_account").value;
+        const zoneoptions = document.getElementById("zone_options").value;
+        const zonecatalog = document.getElementById("zone_catalog").value  
+      
+        const requestData = {
+        "zonena":zonena,
+        "zonemas": zonemas,
+        "zonelastcheck": zonelastcheck,
+        "zonetype": zonetype,
+        "zoneno": zoneno,
+        "zoneaccount": zoneaccount,
+        "zoneoptions": zoneoptions,
+        "zonecatalog": zonecatalog
+    };
+        fetch(`http://localhost:5000/zones`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(requestData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if(data.error)
+            {
+                console.log(data);
+                alert(data.details);
+            }
+            else{
+            console.log(data);
+            alert(data.message)
+            }
+        })
+        .catch(error => alert('Error creating DNS zone details', error));
+    });
+    document.getElementById("submlui").addEventListener('click', function() {
+        const zoneidr= document.getElementById("zone_idr_r").value;
+        const zonenamr = document.getElementById("zone_namer_r").value;
+        const zonelastcheckr = document.getElementById("zone_typer_r").value;
+        const zonetyper = document.getElementById("zone_contentr").value
+        const zonenor = document.getElementById("zone_ttlr_r").value;
+        const zoneaccountr= document.getElementById("zone_pror_r").value;
+        const zoneoptionsr = document.getElementById("zone_r").value;
+       
+      
+        const requestData = {
+        "zoneidr":zoneidr,
+        "zonenamr": zonenamr,
+        "zonelastcheckr": zonelastcheckr,
+        "zonetyper": zonetyper,
+        "zonenor": zonenor,
+        "zoneaccountr": zoneaccountr,
+        "zoneoptionsr": zoneoptionsr,
+       
+    };
+        fetch(`http://localhost:5000/zones/${zoneidr}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(requestData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data);
+            if(data.error)
+            {
+                alert(data.error);
+            }
+            else{
+                console.log(data.details)
+                alert(data.message);
+            }
+            
+        })
+        .catch(error => alert('Error creating DNS zone details', error));
+    });
+    
+
+
+</script>
+
+
+</html>
