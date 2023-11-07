@@ -26,7 +26,7 @@
         
         document.getElementById("signup-user").addEventListener("click",function()
         {
-            window.open("login.html");
+            window.open("login.html",target='_self');
         })
         document.getElementById("submit-user-login").addEventListener("click",function()
         {
@@ -50,18 +50,19 @@
         .then(data => {
             console.log("Dara bhai")
             console.log(data)
-    if (data.userils.length > 0) {
+    if (!data.message) {
         console.log("User authenticated")
         console.log(data.token)
         let y=jwt_decode(data.token);
         console.log('dara bhai')
         console.log(y)
         console.log(y.uid);
-        localStorage.setItem("UID",y.uid)
-        localStorage.setItem("Username",y.username)
+        sessionStorage.setItem("UID",y.uid)
+        sessionStorage.setItem("Username",y.username)
+        sessionStorage.setItem("Token",data.token)
         console.log(y.username);
         console.log(y)
-        window.open("zone.html");
+        window.open("zone.html",target='_self');
      
     } else {
         console.log("User not found or login failed");

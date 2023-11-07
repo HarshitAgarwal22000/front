@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from functools import wraps
 import requests
 import MySQLdb
 import jwt
@@ -32,6 +33,30 @@ def validate(token):
         return None  # Invalid token
 
 
+def token_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = request.headers.get('Authorization')
+
+        if not token:
+            return jsonify({'error': 'Token is missing'}), 401
+
+        try:
+            print(token)
+            payloa = validate(token)
+            print(payloa)
+            if not payloa:
+                return jsonify({'error': 'Invalid token'}), 401
+
+            user_id = payloa['uid']
+            username = payloa['username']
+            return f(user_id, username, *args, **kwargs)
+
+        except Exception as e:
+            return jsonify({'error': 'Token validation error', 'details': str(e)}), 401
+
+    return decorated
+
 
 def pdns_request(method, url, data=None):
     headers = {'X-API-Key': api_key, 'Content-Type': 'application/json'}
@@ -58,7 +83,8 @@ def pdns_request(method, url, data=None):
     return response
 
 @app.route('/zones', methods=['GET', 'POST'])
-def manage_dns_zones():
+@token_required
+def manage_dns_zones(user_id,username):
     if request.method == 'GET':
        
         try:
@@ -78,12 +104,12 @@ def manage_dns_zones():
         except Exception as e:
             return jsonify({'error': 'Invalid JSON data', 'details': str(e)}), 400
 
-        query = 'INSERT INTO zones (name, master, last_check, type, notified_serial, account, options, catalog) ' \
-                'VALUES (%s, %s, %s, %s, %s, %s, %s, %s)'
+        query = 'INSERT INTO zones (name, master, last_check, type, notified_serial, account, options, catalog,user_id) ' \
+                'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)'
         data = (
             zone_data['zonena'], zone_data['zonemas'], zone_data['zonelastcheck'],
             zone_data['zonetype'], zone_data['zoneno'], zone_data['zoneaccount'],
-            zone_data['zoneoptions'], zone_data['zonecatalog']
+            zone_data['zoneoptions'], zone_data['zonecatalog'], user_id
         )
 
         try:
@@ -94,7 +120,8 @@ def manage_dns_zones():
             return jsonify({'error': 'Database error', 'details': str(e)}), 500
 
 @app.route('/zones/<string:zone_name>', methods=['PATCH', 'DELETE'])
-def manage_dns_zone(zone_name):
+@token_required
+def manage_dns_zone(user_id,username,zone_name):
     if request.method == 'PATCH':
      cursor.execute('SELECT name FROM zones WHERE name = %s', (zone_name,))
      zone_exists = cursor.fetchone()
@@ -142,7 +169,8 @@ def manage_dns_zone(zone_name):
             return jsonify({"message": f"Recordsin zone {zone_name} have been deleted and zone has been deleted."})
 
 @app.route('/zones/<int:zone_id>', methods=['GET', 'POST', 'DELETE', 'PATCH'])
-def manage(zone_id):
+@token_required
+def manage(user_id,username,zone_id):
     if request.method == 'GET':
      cursor.execute('SELECT id FROM zones WHERE id = %s', (zone_id,))
      zone_exists = cursor.fetchone()
@@ -172,11 +200,12 @@ def manage(zone_id):
         except Exception as e:
             return jsonify({'error': 'Invalid JSON data', 'details': str(e)}), 400
 
-        query = 'INSERT INTO dns_records (zone_id, name, type, content, ttl, prio, disabled) ' \
-                'VALUES (%s, %s, %s, %s, %s, %s, %s)'
-        data = (zone_name, zone_master, zone_last_check, zone_type, zone_no, zone_account, zone_options)
+        query = 'INSERT INTO dns_records (zone_id, name, type, content, ttl, prio, disabled,user_id) ' \
+                'VALUES (%s, %s, %s, %s, %s, %s, %s, %s)'
+        data = (zone_name, zone_master, zone_last_check, zone_type, zone_no, zone_account, zone_options, user_id)
 
         try:
+            
             cursor.execute(query, data)
             db.commit()
             return jsonify({"message": f"Records in zone {zone_id} have been added."})
@@ -191,7 +220,7 @@ def manage(zone_id):
      zone_exists = cursor.fetchone()
      if zone_exists:
         try:
-            cursor.execute(f'DELETE FROM dns_records where zone_id ={zone_id}')
+            cursor.execute(f'DELETE FROM dns_records where zone_id ={zone_id} AND user_id= %s',(user_id,))
             db.commit()
             return jsonify({"message": f"Recordsin zone {zone_id} have been deleted."})
         except MySQLdb.Error as e:
@@ -235,7 +264,8 @@ def manage(zone_id):
         return jsonify({"error": "Invalid Zone ID"}), 400
 
 @app.route('/zones/<int:zone_id>/<string:typer>', methods=['DELETE', 'GET'])
-def man(zone_id, typer):
+@token_required
+def man(user_id,username,zone_id, typer):
     if request.method == 'DELETE':
      cursor.execute('SELECT id FROM zones WHERE id = %s', (zone_id,))
      zone_exists = cursor.fetchone()
@@ -267,6 +297,7 @@ def man(zone_id, typer):
             return jsonify({'error': 'Database error', 'details': str(e)}), 500
 
 @app.route('/zones/<string:typer>', methods=['GET'])
+@token_required
 def mans(typer):
     if request.method == 'GET':
         try:
@@ -316,11 +347,15 @@ def login():
         print(userlogin,passlogin)
         cursor.execute("SELECT * FROM users WHERE username=%s AND password=%s",(userlogin,passlogin))
         userils=cursor.fetchall()
-        print(userils[0][0])
-        logintok=generate_jwt(userils[0][0],userils[0][1])
-        print(logintok)
+        print()
+        if(len(userils)>0):
+            print(userils[0][0])
+            logintok=generate_jwt(userils[0][0],userils[0][1])
+            print(logintok)
 
-        return jsonify({"token":logintok,"userils":userils})
+            return jsonify({"token":logintok,"userils":userils})
+        else:
+            return jsonify({"message":"No records found"})
      except MySQLdb.Error as e:
         print(e)
         return jsonify({'error': 'Database error', 'details': str(e)}), 500

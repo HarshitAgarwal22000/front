@@ -4,6 +4,12 @@
     <title>DNS Zone Management</title>
 </head>
 <body>
+    <br>
+    <div id="navbar" style="align-items:flex-end">
+        <h3 id="username"></h3>
+        <h3 id="logout">Logout</h3>
+    </div>
+    <hr>
     <h1>DNS Zone Management</h1>
 
     <h2>Create New DNS Zone</h2>
@@ -118,6 +124,19 @@
 </body>
 
 <script>
+    let toke=sessionStorage.getItem("Token");
+    window.onload=function()
+    {
+        let uid=sessionStorage.getItem("UID")
+        let username=sessionStorage.getItem("Username")
+        console.log(username)
+        document.getElementById("username").innerHTML=username;
+    }
+    document.getElementById("logout").addEventListener("click",function()
+    {
+        sessionStorage.clear()
+        window.open("signin.html",target='_self');
+    })
     document.getElementById('fetch-details-button').addEventListener('click', function() {
         const zoneName = 'example.com'; 
 
@@ -125,7 +144,8 @@
         fetch(`http://localhost:5000/zones`, {
             method: 'GET',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Authorization': `${toke}`
             }
         })
         .then(response => response.json())
@@ -149,7 +169,8 @@
         fetch(`http://localhost:5000/zones/${zoneName}`, {
             method: 'GET',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Authorization': `${toke}`
             }
         })
         .then(response => response.json())
@@ -180,7 +201,8 @@
         fetch(`http://localhost:5000/zones/${zoneName}`, {
             method: 'DELETE',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Authorization': `${toke}`
             }
         })
         .then(response => response.json())
@@ -204,7 +226,8 @@
         fetch(`http://localhost:5000/zones/${zoneName}`, {
             method: 'DELETE',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Authorization': ` ${toke}`
             }
         })
         .then(response => response.json())
@@ -222,7 +245,8 @@
         fetch(`http://localhost:5000/zones/${zoneName}/${zoneNa}`, {
             method: 'DELETE',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Authorization': `${toke}`
             }
         })
         .then(response => response.json())
@@ -255,7 +279,8 @@
         fetch(`http://localhost:5000/zones/${zoneName}`, {
             method: 'PATCH',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Authorization': `${toke}`
             },
             body: JSON.stringify(requestData)
         })
@@ -291,7 +316,8 @@
         fetch(`http://localhost:5000/zones/${zoneId}`, {
             method: 'PATCH',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Authorization': `${toke}`
             },
             body: JSON.stringify(requestData)
         })
@@ -333,7 +359,8 @@
         fetch(`http://localhost:5000/zones`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                "Authorization": `${toke}`
             },
             body: JSON.stringify(requestData)
         })
@@ -374,7 +401,8 @@
         fetch(`http://localhost:5000/zones/${zoneidr}`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                "Authorization": `${toke}`
             },
             body: JSON.stringify(requestData)
         })
