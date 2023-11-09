@@ -5,8 +5,8 @@
     <body>
         <center>
             <h1>Sign Up</h1>
-        <h3>Username</h3>
-        <input type="text" id="sign-up-username">
+        <h3>Email</h3>
+        <input type="email" id="sign-up-username">
         <h3>Password</h3>
         <input type="password" id="sign-up-password">
         <h3>Phone Number</h3>
@@ -17,12 +17,23 @@
         <div style="display: block;">
         <button id="submit-user">SignUp</button>
         </div>
+        <br>
+        <h5 >Already a member?</h5>
         <button id="login-user">Login</button>
         </center>
+        <script src="https://cdn.jsdelivr.net/npm/jwt-decode@3.1.2/build/jwt-decode.min.js"></script>
         <script>
             document.getElementById("submit-user").addEventListener("click",function()
             {
-                let user=document.getElementById("sign-up-username").value;
+                let usern=document.getElementById("sign-up-username").value;
+                let phnn=document.getElementById("sign-up-phonenumber").value;
+                const regex=new RegExp("[a-zA-Z0-9]*[@][a-z]*[.][c][o][m]")
+                const reg=new RegExp("[0-9]{10}")
+                if(regex.test(usern) && reg.test(phnn))
+                {
+                    console.log("Email verified")
+                    let user=document.getElementById("sign-up-username").value;
+                    console.log(user)
                 let pass=document.getElementById("sign-up-password").value;
                 let phone=document.getElementById("sign-up-phonenumber").value;
                 let userData={
@@ -40,28 +51,39 @@
                    
                 }
                 )
-                .then( response => {
-                    console.log(response)
-                    if(response.ok)
+                .then( response =>  response.json())
+                .then(data=>{
+                    console.log(data)
+                    if(data.message)
                     {
-                        console.log("Login");
-                        window.open("zone.html",target='_self')
-                        
+
+                        window.open("zone.html")
+                        console.log("User authenticated")
+        console.log(data.token)
+        let y=jwt_decode(data.token);
+        console.log('dara bhai')
+        console.log(y)
+        console.log(y.uid);
+        sessionStorage.setItem("UID",y.uid)
+        sessionStorage.setItem("Username",y.username)
+        sessionStorage.setItem("Token",data.token)
+                    
+        
+     
                     }
                     else{
-                        console.log(response.error)
-                        console.log("Login failed");
-                        
+                        console.log("Signup failed")
                     }
-                })
-                .then(data=>{
-                    console.log("data"+data)
                 })
 
                 
                 .catch(error =>{
                     console.log("Error",error);
                 })
+            }
+            else{
+                console.log("Invalid email/ phone number format")
+            }
 
             })
             document.getElementById("login-user").addEventListener("click",function(){

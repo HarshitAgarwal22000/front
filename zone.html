@@ -35,7 +35,7 @@
         <br>
     <h2>Create DNS Record in a specific Zone</h2>
         
-        <label >Zone Id</label>
+        <label >Domain Id</label>
         <input type="text" id="zone_idr_r"  required>
         <label >Name</label>
         <input type="text" id="zone_namer_r" >
@@ -345,7 +345,9 @@
         const zoneaccount= document.getElementById("zone_account").value;
         const zoneoptions = document.getElementById("zone_options").value;
         const zonecatalog = document.getElementById("zone_catalog").value  
-      
+        const regzone=new RegExp("[a-zA-Z0-9]*[.][a-z]{3}")
+        if(regzone.test(zonena))
+        {
         const requestData = {
         "zonena":zonena,
         "zonemas": zonemas,
@@ -377,6 +379,10 @@
             }
         })
         .catch(error => alert('Error creating DNS zone details', error));
+    }
+    else{
+        console.log("Invalid Zone Name format")
+    }
     });
     document.getElementById("submlui").addEventListener('click', function() {
         const zoneidr= document.getElementById("zone_idr_r").value;
