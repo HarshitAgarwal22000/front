@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+    <head>
+        <title></title>
+    </head>
+    <body>
+        <center>
+            <h1>Login</h1>
+            <br>
+            <br>
+        <h3>Username</h3>
+        <input type="email" id="login-username">
+        <h3>Password</h3>
+        <input type="password" id="login-password">
+        
+        <br>
+        <br>
+        <br>
+        <div style="display: block;">
+        <button id="submit-user-login">Submit</button>
+        </div>
+        <br>
+        <h5>New member?</h5>
+        <button id="signup-user">Sign Up</button>
+        </center>
+    </body>
+    <script src="https://cdn.jsdelivr.net/npm/jwt-decode@3.1.2/build/jwt-decode.min.js"></script>
+    <script>
+        
+        document.getElementById("signup-user").addEventListener("click",function()
+        {
+            window.open("login.html",target='_self');
+        })
+        document.getElementById("submit-user-login").addEventListener("click",function()
+        {
+            let usern=document.getElementById("login-username").value;
+            let passw=document.getElementById("login-password").value;
+            
+            let logindet={
+                "Login-User":usern,
+                "Login-Password":passw
+            }
+            
+            fetch(`http://localhost:5000/login`,{
+                method: 'POST',
+                headers: {
+                    'Content-Type':'application/json'
+                },
+                body: JSON.stringify(logindet)
+            })
+        
+        .then( response => response.json())
+        .then(data => {
+            console.log("Dara bhai")
+            console.log(data)
+    if (!data.message) {
+        console.log("User authenticated")
+        console.log(data.token)
+        let y=jwt_decode(data.token);
+        console.log('dara bhai')
+        console.log(y)
+        console.log(y.uid);
+        sessionStorage.setItem("UID",y.uid)
+        sessionStorage.setItem("Username",y.username)
+        sessionStorage.setItem("Token",data.token)
+        console.log(y.username);
+        console.log(y)
+        window.open("zone.html", target='_self');
+     
+    } else {
+        console.log("User not found or login failed");
+    }
+})
+        .catch(error =>{
+            console.log(error)
+        })
+    })
+        
+    </script>
+</html>
