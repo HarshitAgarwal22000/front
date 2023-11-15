@@ -6,95 +6,19 @@ import hvac
 import requests
 import MySQLdb
 import jwt
-
-client=hvac.Client()
-client=hvac.Client(url='http://127.0.0.1:8200', token='hvs.WvGJVyK4zYPgqvZhoDSUHBIu' )
-secret_data = client.secrets.kv.v2.read_secret_version(path='myapp/config')
-
-SECRET_KEY=secret_data['data']['data']['SECRET_KEY']
-db_key=secret_data['data']['data']['db_key']
-user=secret_data['data']['data']['user']
-
+from auth import token_required, validate, generate_jwt
+from db import db, cursor
+from pdnsreq import pdns_request
+from config import user, db_key, SECRET_KEY, api_key
+logger.debug(SECRET_KEY)
+logger.debug(f"New dub{user}")
+logger.debug(api_key)
+logger.debug(db_key)
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
 db = MySQLdb.connect(host='localhost', user=f'{user}', passwd=f'{db_key}', db='powerdns_db')
 cursor = db.cursor()
-
-
-
 pdns_server = 'http://0.0.0.0:8081'
-
-api_key=secret_data['data']['data']['api_key']
-logger.debug(api_key)
-
-logger.debug(api_key)
-def generate_jwt(uid,username):
- 
-        payload={"uid":uid,"username":username}
-        token=jwt.encode(payload,SECRET_KEY,algorithm='HS256')
-        print(token)
-        return token
-   
-def validate(token):
-    try:
-        payload=jwt.decode(token,SECRET_KEY,algorithms='HS256')
-        print(payload)
-        return payload
-    except jwt.ExpiredSignatureError:
-        return None  # Token has expired
-    except jwt.InvalidTokenError:
-        return None  # Invalid token
-
-
-def token_required(f):
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        token = request.headers.get('Authorization')
-
-        if not token:
-            return jsonify({'error': 'Token is missing'}), 401
-
-        try:
-            print(token)
-            payloa = validate(token)
-            print(payloa)
-            if not payloa:
-                return jsonify({'error': 'Invalid token'}), 401
-
-            user_id = payloa['uid']
-            username = payloa['username']
-            return f(user_id, username, *args, **kwargs)
-
-        except Exception as e:
-            return jsonify({'error': 'Token validation error', 'details': str(e)}), 401
-
-    return decorated
-
-
-def pdns_request(method, url, data=None):
-    headers = {'X-API-Key': api_key, 'Content-Type': 'application/json'}
-    
-    try:
-        if method == 'GET':
-            response = requests.get(url, headers=headers)
-        elif method == 'POST':
-            response = requests.post(url, headers=headers, json=data)
-        elif method == 'PUT':
-            response = requests.put(url, headers=headers, json=data)
-        elif method == 'DELETE':
-            response = requests.delete(url, headers=headers)
-        elif method == 'PATCH':
-            response = requests.patch(url, headers=headers, json=data)
-        else:
-            return jsonify({'error': 'Invalid HTTP method'}), 400
-    except Exception as e:
-        return jsonify({'error': 'Failed to communicate with the external service', 'details': str(e)}), 500
-
-    if response.status_code >= 400:
-        return jsonify({'error': 'External service error', 'details': response.text}), response.status_code
-
-    return response
-
 @app.route('/zones', methods=['GET', 'POST'])
 @token_required
 def manage_dns_zones(user_id,username):
